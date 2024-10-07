@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const { spawn } = require("child_process");
+const fs = require("fs");
 
 function runPythonScript(scriptPath, args, callback) {
 	const pythonProcess = spawn("python", [scriptPath].concat(args));
@@ -30,6 +31,21 @@ const router = express.Router();
 
 app.get("/", function (req, res) {
 	res.send("index.html");
+});
+
+app.get("/tasks", (req, res) => {
+	res.send(JSON.parse(fs.readFileSync("tasks.json")));
+});
+
+app.get("/tasks/:type", (req, res) => {
+	const all = JSON.parse(fs.readFileSync("tasks.json"));
+
+	const type = req.params.type;
+	if (type in all) {
+		res.send(all[type]);
+	} else {
+		res.send(JSON.parse("[]"));
+	}
 });
 
 /*
