@@ -33,30 +33,17 @@ app.get("/", function (req, res) {
 	res.send("index.html");
 });
 
-app.get("/tasks", (req, res) => {
-	res.send(JSON.parse(fs.readFileSync("tasks.json")));
-});
+app.get("/bytag/:tag", (req, res) => {
+	const tag = req.params.tag;
 
-app.get("/tasks/:type", (req, res) => {
-	const all = JSON.parse(fs.readFileSync("tasks.json"));
-
-	const type = req.params.type;
-	if (type in all) {
-		res.send(all[type]);
-	} else {
-		res.send(JSON.parse("[]"));
-	}
+	runPythonScript("scripts/backend.py", ["childTags", tag], (err, result) => {
+		if (err) {
+			res.status(500).send(err);
+		} else {
+			res.send(JSON.parse(result));
+		}
+	});
 });
-
-/*
-runPythonScript("scripts/backend.py", ["getClub", tag], (err, result) => {
-	if (err) {
-		res.status(500).send(err);
-	} else {
-		res.send(JSON.parse(result));
-	}
-});
-*/
 
 const http = require("http").createServer(app);
 

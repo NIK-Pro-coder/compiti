@@ -1,12 +1,17 @@
 import sys
 import requests
-
-API_KEY  = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6ImM3MzdlMDQxLWUxNjYtNGU3ZS04YzcyLWNkZWFhYmM3Mzc3NSIsImlhdCI6MTcyNjg1MjY1Mywic3ViIjoiZGV2ZWxvcGVyL2U4NjJiYzNmLTRmMDctMDJlMi05MmQ5LTk0OTNjZjMxZjFlYyIsInNjb3BlcyI6WyJicmF3bHN0YXJzIl0sImxpbWl0cyI6W3sidGllciI6ImRldmVsb3Blci9zaWx2ZXIiLCJ0eXBlIjoidGhyb3R0bGluZyJ9LHsiY2lkcnMiOlsiOTMuNDUuODMuNDAiXSwidHlwZSI6ImNsaWVudCJ9XX0.YJ6t5XoBPQFm_ArKQ5XuJ8ArYwmv8QbCoMOBpWim60reJWI525sTdJCFvzlKKrfcK743AG3XYpoDyZG7pqYcqQ"
-HEAD = {
-	"Authorization" : f"Bearer {API_KEY}"
-}
+import json
 
 commands = {}
+
+def get(url) :
+	r = requests.get(url)
+	return json.loads(r.text)
+
+def getbytag(tag) :
+	return get(
+		f"https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&tags={tag}&json=1&limit=1000"
+	)
 
 def addEntry(func) :
 	name = func.__name__
@@ -14,19 +19,20 @@ def addEntry(func) :
 	return func
 
 @addEntry
-def getPlayer(tag) :
-	url = f"https://api.brawlstars.com/v1/players/%23{tag.strip('#')}"
-	r = requests.get(url, headers=HEAD)
+def childTags(tag) :
+	posts = getbytag(tag)
 
-	print(r.text)
+	childtags = {}
+	for i in posts :
+		for k in i["tags"].split(" ") :
+			if k in childtags :
+				childtags[k] += 1
+			else :
+				childtags[k] = 1
 
-#test club : #29GPQVJCR
-@addEntry
-def getClub(tag) :
-	url = f"https://api.brawlstars.com/v1/clubs/%23{tag.strip('#')}/members"
-	r = requests.get(url, headers=HEAD)
+	childtags = {i: childtags[i] for i in childtags if childtags[i]>=5}
 
-	print(r.text)
+	print(json.dumps(childtags))
 
 if __name__=="__main__" :
 	cmd = sys.argv[1]
